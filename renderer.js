@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
 
 let todos = [];
-let isPinned = false;
+let isLocked = false;
 let isAddOpen = false;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,17 +25,30 @@ function setupEventListeners() {
         if (e.key === 'Enter') addTodo();
     });
     
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            if (!isAddOpen) {
+                toggleAddOverlay();
+            }
+        }
+        if (e.key === 'Escape' && isAddOpen) {
+            toggleAddOverlay();
+        }
+    });
+    
     document.getElementById('minimize-btn').addEventListener('click', () => {
         ipcRenderer.send('window-minimize');
     });
     
-    document.getElementById('close-btn').addEventListener('click', () => {
-        ipcRenderer.send('window-close');
-    });
+    document.getElementById('close-btn').addEventListener('click', handleClose);
     
-    document.getElementById('pin-btn').addEventListener('click', togglePin);
+    document.getElementById('pin-btn').addEventListener('click', toggleLock);
     
     document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
+    
+    document.getElementById('dialog-minimize').addEventListener('click', () => handleDialogChoice('minimize'));
+    document.getElementById('dialog-close').addEventListener('click', () => handleDialogChoice('close'));
     
     document.addEventListener('click', (e) => {
         const overlay = document.getElementById('input-overlay');
@@ -44,6 +57,44 @@ function setupEventListeners() {
             toggleAddOverlay();
         }
     });
+}
+
+function handleClose() {
+    const savedChoice = localStorage.getItem('closeChoice');
+    if (savedChoice) {
+        if (savedChoice === 'minimize') {
+            ipcRenderer.send('window-minimize');
+        } else {
+            ipcRenderer.send('window-quit');
+        }
+    } else {
+        showCloseDialog();
+    }
+}
+
+function showCloseDialog() {
+    document.getElementById('dialog-overlay').classList.add('show');
+    document.getElementById('dont-ask-again').checked = false;
+}
+
+function hideCloseDialog() {
+    document.getElementById('dialog-overlay').classList.remove('show');
+}
+
+function handleDialogChoice(choice) {
+    const dontAskAgain = document.getElementById('dont-ask-again').checked;
+    
+    if (dontAskAgain) {
+        localStorage.setItem('closeChoice', choice);
+    }
+    
+    hideCloseDialog();
+    
+    if (choice === 'minimize') {
+        ipcRenderer.send('window-minimize');
+    } else {
+        ipcRenderer.send('window-quit');
+    }
 }
 
 function toggleLanguage() {
@@ -66,15 +117,15 @@ function toggleAddOverlay() {
     }
 }
 
-async function togglePin() {
-    isPinned = await ipcRenderer.invoke('toggle-pin');
-    const pinBtn = document.getElementById('pin-btn');
-    if (isPinned) {
-        pinBtn.classList.add('pinned');
-        pinBtn.title = t('unpinTitle');
+async function toggleLock() {
+    isLocked = await ipcRenderer.invoke('toggle-lock');
+    const lockBtn = document.getElementById('pin-btn');
+    if (isLocked) {
+        lockBtn.classList.add('locked');
+        lockBtn.title = t('unlockTitle');
     } else {
-        pinBtn.classList.remove('pinned');
-        pinBtn.title = t('pinTitle');
+        lockBtn.classList.remove('locked');
+        lockBtn.title = t('lockTitle');
     }
 }
 
@@ -103,6 +154,16 @@ async function toggleTodo(id) {
         todo.completed = !todo.completed;
         await saveTodos();
         renderTodos();
+        
+        if (todo.completed) {
+            const todoItem = document.querySelector(`[onclick="toggleTodo(${id})"]`).closest('.todo-item');
+            if (todoItem) {
+                todoItem.classList.add('just-completed');
+                setTimeout(() => {
+                    todoItem.classList.remove('just-completed');
+                }, 600);
+            }
+        }
     }
 }
 

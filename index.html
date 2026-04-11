@@ -11,7 +11,7 @@
         <div class="window-controls">
             <button class="control-btn close" id="close-btn"></button>
             <button class="control-btn minimize" id="minimize-btn"></button>
-            <button class="control-btn pin" id="pin-btn" title="固定到桌面"></button>
+            <button class="control-btn pin" id="pin-btn" title="锁定位置"></button>
         </div>
         <div class="header-right">
             <button id="lang-toggle" title="切换语言">中/EN</button>
@@ -26,6 +26,22 @@
     <div class="input-overlay" id="input-overlay">
         <input type="text" id="todo-input" placeholder="输入新任务...">
         <button id="add-btn">添加</button>
+    </div>
+    
+    <div class="dialog-overlay" id="dialog-overlay">
+        <div class="dialog-box">
+            <div class="dialog-title">关闭确认</div>
+            <div class="dialog-message">您想要如何处理？</div>
+            <div class="dialog-detail">选择"最小化到托盘"将隐藏窗口但保持应用运行。</div>
+            <label class="dialog-checkbox">
+                <input type="checkbox" id="dont-ask-again">
+                <span>不再询问</span>
+            </label>
+            <div class="dialog-buttons">
+                <button class="dialog-btn minimize-btn" id="dialog-minimize">最小化到托盘</button>
+                <button class="dialog-btn close-btn" id="dialog-close">关闭应用</button>
+            </div>
+        </div>
     </div>
     
     <script src="i18n.js"></script>
