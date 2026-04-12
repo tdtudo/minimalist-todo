@@ -4,12 +4,33 @@
     box-sizing: border-box;
 }
 
+:root {
+    --bg-opacity: 0.3;
+    --bg-image: none;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: transparent;
     color: rgba(0, 0, 0, 0.85);
     min-height: 100vh;
     overflow: hidden;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--bg-opacity);
+    z-index: -1;
+    pointer-events: none;
 }
 
 .window-header {
@@ -20,6 +41,22 @@ body {
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(20px);
     -webkit-app-region: drag;
+    position: relative;
+}
+
+.window-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--bg-opacity);
+    z-index: -1;
+    pointer-events: none;
 }
 
 .window-controls {
@@ -72,22 +109,23 @@ body {
     background: #667eea;
 }
 
-#lang-toggle {
-    padding: 2px 6px;
+#settings-toggle {
+    width: 18px;
+    height: 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 50%;
     background: rgba(0, 0, 0, 0.08);
-    color: rgba(0, 0, 0, 0.4);
-    font-size: 8px;
-    font-weight: 500;
+    font-size: 10px;
     cursor: pointer;
     transition: all 0.3s;
-    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#lang-toggle:hover {
+#settings-toggle:hover {
     background: rgba(0, 0, 0, 0.15);
-    color: rgba(0, 0, 0, 0.6);
+    transform: rotate(30deg);
 }
 
 #add-toggle {
@@ -124,6 +162,22 @@ body {
     backdrop-filter: blur(20px);
     height: calc(100vh - 26px);
     overflow: hidden;
+    position: relative;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--bg-opacity);
+    z-index: -1;
+    pointer-events: none;
 }
 
 #todo-list {
@@ -242,6 +296,18 @@ body {
     color: rgba(0, 0, 0, 0.75);
     line-height: 1.3;
     transition: all 0.3s ease;
+}
+
+.edit-input {
+    flex: 1;
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.85);
+    line-height: 1.3;
+    padding: 2px 4px;
+    border: 1px solid rgba(102, 126, 234, 0.5);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    outline: none;
 }
 
 .delete-btn {
@@ -438,4 +504,13 @@ body {
 
 .dialog-btn.close-btn:hover {
     background: rgba(255, 71, 87, 0.25);
+}
+
+.todo-item.dragging {
+    opacity: 0.5;
+    background: rgba(102, 126, 234, 0.2);
+}
+
+.todo-item.drag-over {
+    border-top: 2px solid rgba(102, 126, 234, 0.8);
 }

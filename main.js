@@ -5,6 +5,7 @@ const path = require('path');
 const todoFilePath = path.join(app.getPath('userData'), 'todos.json');
 
 let win;
+let settingsWin;
 let tray;
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -27,23 +28,13 @@ if (!gotTheLock) {
 }
 
 function createTray() {
-    const icon = nativeImage.createFromDataURL(
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVQ4T2NkoBAwUqifYdAY8B8I/v9ngOwCZWVlRkNDw/8wA4DCMDAMAAPksBd4xP1HCQeYGPzPwIhh2IEZwPj/nwHhM5D5DzD9B8j8ZyDzH2D6D5D5D2D6j5j+A2T+M5D5z0DmPwOZ/wxk/gsAMgwDAwAqngGmTQY4IQAAAABJRU5ErkJggg=='
-    );
+    const iconPath = path.join(__dirname, 'icon.png');
+    const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
     
     tray = new Tray(icon);
     tray.setToolTip('待办清单');
     
-    const contextMenu = Menu.buildFromTemplate([
-        { label: '显示窗口', click: () => { if (win) { win.show(); win.focus(); } } },
-        { type: 'separator' },
-        { label: '退出', click: () => { 
-            tray.destroy();
-            app.exit(); 
-        } }
-    ]);
-    
-    tray.setContextMenu(contextMenu);
+    updateTrayMenu();
     
     tray.on('click', () => {
         if (win) {
@@ -57,7 +48,35 @@ function createTray() {
     });
 }
 
+function updateTrayMenu() {
+    const autostartEnabled = app.getLoginItemSettings().openAtLogin;
+    
+    const contextMenu = Menu.buildFromTemplate([
+        { label: '显示窗口', click: () => { if (win) { win.show(); win.focus(); } } },
+        { type: 'separator' },
+        { 
+            label: autostartEnabled ? '✓ 开机自启动' : '开机自启动', 
+            click: () => { 
+                app.setLoginItemSettings({
+                    openAtLogin: !autostartEnabled,
+                    openAsHidden: true
+                });
+                updateTrayMenu();
+            } 
+        },
+        { type: 'separator' },
+        { label: '退出', click: () => { 
+            tray.destroy();
+            app.exit(); 
+        } }
+    ]);
+    
+    tray.setContextMenu(contextMenu);
+}
+
 function createWindow() {
+    const iconPath = path.join(__dirname, 'icon.png');
+    
     win = new BrowserWindow({
         width: 280,
         height: 400,
@@ -66,6 +85,7 @@ function createWindow() {
         hasShadow: true,
         movable: true,
         skipTaskbar: true,
+        icon: iconPath,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -75,12 +95,64 @@ function createWindow() {
     win.loadFile('index.html');
 }
 
+function createSettingsWindow() {
+    if (settingsWin) {
+        settingsWin.focus();
+        return;
+    }
+    
+    const mainBounds = win.getBounds();
+    
+    settingsWin = new BrowserWindow({
+        width: 360,
+        height: 280,
+        x: mainBounds.x + (mainBounds.width - 360) / 2,
+        y: mainBounds.y + (mainBounds.height - 280) / 2,
+        frame: false,
+        transparent: true,
+        hasShadow: true,
+        resizable: false,
+        parent: win,
+        modal: false,
+        alwaysOnTop: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    
+    settingsWin.loadFile('settings.html');
+    
+    settingsWin.on('closed', () => {
+        settingsWin = null;
+        if (win) {
+            win.webContents.send('settings-closed');
+        }
+    });
+}
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+ipcMain.on('open-settings', () => {
+    createSettingsWindow();
+});
+
+ipcMain.on('close-settings', () => {
+    if (settingsWin) {
+        settingsWin.close();
+    }
+});
+
+ipcMain.on('settings-changed', (event, data) => {
+    if (win) {
+        win.webContents.send('settings-updated', data);
+    }
 });
 
 ipcMain.handle('read-todos', async () => {
@@ -120,4 +192,17 @@ ipcMain.handle('toggle-lock', () => {
         return isMovable;
     }
     return false;
+});
+
+ipcMain.handle('get-autostart', () => {
+    const settings = app.getLoginItemSettings();
+    return settings.openAtLogin;
+});
+
+ipcMain.handle('set-autostart', (event, enable) => {
+    app.setLoginItemSettings({
+        openAtLogin: enable,
+        openAsHidden: true
+    });
+    return enable;
 });

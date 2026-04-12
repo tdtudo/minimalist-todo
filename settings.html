@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: rgba(255, 255, 255, 0.98);
+            color: rgba(0, 0, 0, 0.85);
+            overflow: hidden;
+        }
+        
+        .drag-header {
+            height: 32px;
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            -webkit-app-region: drag;
+            cursor: move;
+        }
+        
+        .drag-header-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.85);
+        }
+        
+        .drag-header-close {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            -webkit-app-region: no-drag;
+        }
+        
+        .drag-header-close:hover {
+            background: rgba(0, 0, 0, 0.08);
+            color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .settings-container {
+            display: flex;
+            height: calc(100vh - 32px);
+        }
+        
+        .settings-sidebar {
+            width: 80px;
+            background: rgba(0, 0, 0, 0.02);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 8px 0;
+        }
+        
+        .sidebar-item {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(0, 0, 0, 0.04);
+            color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: rgba(102, 126, 234, 1);
+            border-left-color: rgba(102, 126, 234, 1);
+            font-weight: 500;
+        }
+        
+        .settings-content {
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .setting-group {
+            margin-bottom: 14px;
+        }
+        
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .setting-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.5);
+            margin-bottom: 8px;
+        }
+        
+        .lang-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .lang-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .lang-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .lang-btn.active {
+            background: rgba(102, 126, 234, 0.9);
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .color-presets {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .color-preset {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .color-preset:hover {
+            transform: scale(1.2);
+        }
+        
+        .color-preset.active {
+            border-color: rgba(102, 126, 234, 1);
+            transform: scale(1.15);
+        }
+        
+        .custom-color {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .custom-color input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            font-size: 10px;
+            outline: none;
+        }
+        
+        .custom-color input:focus {
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+        
+        .custom-color button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(102, 126, 234, 0.8);
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .custom-color button:hover {
+            background: rgba(102, 126, 234, 1);
+        }
+        
+        .bg-image-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .bg-image-options button {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #upload-bg-image {
+            background: rgba(102, 126, 234, 0.15);
+            color: rgba(102, 126, 234, 1);
+        }
+        
+        #upload-bg-image:hover {
+            background: rgba(102, 126, 234, 0.25);
+        }
+        
+        #clear-bg-image {
+            background: rgba(255, 71, 87, 0.15);
+            color: rgba(255, 71, 87, 1);
+        }
+        
+        #clear-bg-image:hover {
+            background: rgba(255, 71, 87, 0.25);
+        }
+        
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .opacity-control input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .opacity-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: rgba(102, 126, 234, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .opacity-control input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        #opacity-value {
+            min-width: 32px;
+            text-align: right;
+            font-weight: 500;
+            font-size: 11px;
+        }
+        
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="drag-header">
+        <span class="drag-header-title">设置</span>
+        <button class="drag-header-close" id="close-settings-btn">×</button>
+    </div>
+    <div class="settings-container">
+        <div class="settings-sidebar">
+            <div class="sidebar-item active" data-section="language">语言</div>
+            <div class="sidebar-item" data-section="background">背景</div>
+        </div>
+        <div class="settings-content">
+            <div class="content-section active" id="section-language">
+                <div class="setting-group">
+                    <div class="setting-label">选择语言</div>
+                    <div class="lang-options">
+                        <div class="lang-btn active" data-lang="zh">中文</div>
+                        <div class="lang-btn" data-lang="en">English</div>
+                    </div>
+                </div>
+            </div>
+            <div class="content-section" id="section-background">
+                <div class="setting-group">
+                    <div class="setting-label">背景颜色</div>
+                    <div class="color-presets">
+                        <div class="color-preset" data-color="rgba(255, 255, 255, 0.25)" style="background: rgba(255, 255, 255, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(102, 126, 234, 0.25)" style="background: rgba(102, 126, 234, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(40, 200, 64, 0.25)" style="background: rgba(40, 200, 64, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(255, 95, 87, 0.25)" style="background: rgba(255, 95, 87, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(254, 188, 46, 0.25)" style="background: rgba(254, 188, 46, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(255, 149, 0, 0.25)" style="background: rgba(255, 149, 0, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(175, 82, 222, 0.25)" style="background: rgba(175, 82, 222, 0.6);"></div>
+                        <div class="color-preset" data-color="rgba(0, 199, 190, 0.25)" style="background: rgba(0, 199, 190, 0.6);"></div>
+                    </div>
+                    <div class="custom-color">
+                        <input type="text" id="custom-color-input" placeholder="输入颜色值">
+                        <button id="apply-custom-color">应用</button>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">背景图片</div>
+                    <div class="bg-image-options">
+                        <button id="upload-bg-image">上传图片</button>
+                        <button id="clear-bg-image">清除图片</button>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*">
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">背景透明度</div>
+                    <div class="opacity-control">
+                        <input type="range" id="bg-opacity-slider" min="0" max="100" value="30">
+                        <span id="opacity-value">30%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        let currentBgColor = localStorage.getItem('bgColor') || 'rgba(255, 255, 255, 0.25)';
+        let currentBgImage = localStorage.getItem('bgImage') || '';
+        let currentBgOpacity = parseFloat(localStorage.getItem('bgOpacity')) || 0.3;
+        let currentLanguage = localStorage.getItem('language') || 'zh';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initUI();
+            setupEventListeners();
+        });
+        
+        function initUI() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
+            });
+            
+            document.querySelectorAll('.color-preset').forEach(preset => {
+                preset.classList.toggle('active', preset.dataset.color === currentBgColor);
+            });
+            
+            document.getElementById('bg-opacity-slider').value = currentBgOpacity * 100;
+            document.getElementById('opacity-value').textContent = Math.round(currentBgOpacity * 100) + '%';
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('close-settings-btn').addEventListener('click', () => {
+                ipcRenderer.send('close-settings');
+            });
+            
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const section = item.dataset.section;
+                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                    document.getElementById('section-' + section).classList.add('active');
+                });
+            });
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentLanguage = btn.dataset.lang;
+                    localStorage.setItem('language', currentLanguage);
+                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    ipcRenderer.send('settings-changed', { type: 'language' });
+                });
+            });
+            
+            document.querySelectorAll('.color-preset').forEach(preset => {
+                preset.addEventListener('click', () => {
+                    currentBgColor = preset.dataset.color;
+                    currentBgImage = '';
+                    localStorage.setItem('bgColor', currentBgColor);
+                    localStorage.removeItem('bgImage');
+                    document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('active'));
+                    preset.classList.add('active');
+                    ipcRenderer.send('settings-changed', { type: 'background' });
+                });
+            });
+            
+            document.getElementById('apply-custom-color').addEventListener('click', () => {
+                const input = document.getElementById('custom-color-input');
+                const color = input.value.trim();
+                if (color) {
+                    currentBgColor = color;
+                    currentBgImage = '';
+                    localStorage.setItem('bgColor', currentBgColor);
+                    localStorage.removeItem('bgImage');
+                    document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('active'));
+                    ipcRenderer.send('settings-changed', { type: 'background' });
+                    input.value = '';
+                }
+            });
+            
+            document.getElementById('upload-bg-image').addEventListener('click', () => {
+                document.getElementById('file-input').click();
+            });
+            
+            document.getElementById('file-input').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        currentBgImage = event.target.result;
+                        localStorage.setItem('bgImage', currentBgImage);
+                        document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('active'));
+                        ipcRenderer.send('settings-changed', { type: 'background' });
+                    };
+                    reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+            });
+            
+            document.getElementById('clear-bg-image').addEventListener('click', () => {
+                currentBgImage = '';
+                localStorage.removeItem('bgImage');
+                initUI();
+                ipcRenderer.send('settings-changed', { type: 'background' });
+            });
+            
+            document.getElementById('bg-opacity-slider').addEventListener('input', (e) => {
+                currentBgOpacity = e.target.value / 100;
+                document.getElementById('opacity-value').textContent = Math.round(currentBgOpacity * 100) + '%';
+                ipcRenderer.send('settings-changed', { type: 'background' });
+            });
+            
+            document.getElementById('bg-opacity-slider').addEventListener('change', (e) => {
+                localStorage.setItem('bgOpacity', currentBgOpacity);
+            });
+        }
+    </script>
+</body>
+</html>

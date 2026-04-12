@@ -1,121 +1,92 @@
-# ToDo_list - User Manual
+# ToDo_list - 桌面待办清单
 
-## Introduction
+一个极简风格的桌面待办清单应用，采用透明毛玻璃效果，像桌面小组件一样始终显示在桌面上。
 
-ToDo_list is a minimalist desktop todo application with a transparent frosted glass effect. It stays on your desktop without interfering with your workflow.
+## 功能特性
 
-## Installation
+### 核心功能
+- **任务管理** - 添加、完成、删除、编辑任务
+- **拖拽排序** - 长按任务可拖动排序
+- **批量添加** - 使用分号 `;` 或 `；` 分隔，一次添加多个任务
+- **双击编辑** - 双击任务文字可编辑内容
+- **自动排序** - 已完成任务自动移到底部
 
-### Portable Version (Recommended)
-1. Double-click `ToDo_list 1.0.0.exe`
-2. Run directly without installation
-3. Can be placed anywhere (desktop, USB drive, etc.)
+### 窗口特性
+- **透明背景** - 半透明毛玻璃效果
+- **无边框设计** - 极简美观
+- **自由调整大小** - 无最小尺寸限制
+- **桌面固定** - 锁定后固定在桌面位置，不会置顶
+- **系统托盘** - 最小化到托盘，不在任务栏显示
+- **不在 Alt+Tab** - 不干扰应用切换
 
-### Installer Version
-1. Double-click `ToDo_list Setup 1.0.0.exe`
-2. Choose installation path
-3. Click "Next" to complete installation
-4. Desktop shortcut will be created automatically
+### 设置功能
+- **语言切换** - 支持中文/英文，当前语言高亮显示
+- **背景颜色** - 8种预设颜色 + 自定义颜色输入
+- **背景图片** - 支持上传图片作为背景
+- **透明度调节** - 自由调节背景透明度
 
-## Features
+### 其他特性
+- **开机自启** - 可设置开机自动启动
+- **关闭确认** - 可选择最小化或退出，支持"不再询问"
+- **数据持久化** - 自动保存到本地
 
-### Window Controls
+## 快捷键
 
-The application has three colored buttons in the top-left corner:
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl + N` | 打开添加任务面板 |
+| `Enter` | 确认添加任务 |
+| `Esc` | 关闭添加面板 |
 
-- **Red button** - Close application
-- **Yellow button** - Minimize window
-- **Green button** - Pin window to desktop top layer
-  - Button turns purple when pinned
-  - Click again to unpin
+## 安装使用
 
-### Adding Tasks
+### 便携版（推荐）
+1. 双击 `ToDo_list 1.0.0.exe`
+2. 无需安装，直接运行
+3. 可放在任意位置（桌面、U盘等）
 
-1. Click the **+** button in the top-right corner
-2. Enter task content in the input box
-3. Click "Add" button or press **Enter** to confirm
-4. Click outside the input box or click the **+** button again to close
+### 安装版
+1. 双击 `ToDo_list Setup 1.0.0.exe`
+2. 选择安装路径
+3. 完成安装后自动创建桌面快捷方式
 
-### Managing Tasks
+## 操作指南
 
-- **Complete task** - Click the checkbox on the left
-  - Task automatically moves to the bottom
-  - Text shows strikethrough and lighter color
-- **Delete task** - Hover over task and click the "Delete" button on the right
-- **View tasks** - Completed tasks appear at the bottom of the list
+### 窗口控制按钮（左上角）
 
-### Window Features
+| 按钮 | 颜色 | 功能 |
+|------|------|------|
+| 关闭 | 红色 | 关闭应用（弹出确认框） |
+| 最小化 | 黄色 | 最小化到系统托盘 |
+| 锁定 | 绿色/紫色 | 锁定窗口位置 |
 
-- **Transparent background** - Semi-transparent frosted glass effect
-- **Not in Alt+Tab** - Doesn't interfere with app switching
-- **Not in taskbar** - Acts like a desktop widget
-- **Draggable** - Drag by the window title bar to move
-- **Always on top** - Stays above other windows when pinned
+### 添加任务
+1. 点击右上角 **+** 按钮或按 `Ctrl + N`
+2. 输入任务内容
+3. 按 `Enter` 或点击"添加"按钮
+4. 使用分号可批量添加：`任务1;任务2;任务3`
 
-### Language Switching
+### 管理任务
+- **完成** - 点击左侧复选框
+- **删除** - 悬停显示删除按钮，点击删除
+- **编辑** - 双击任务文字
+- **排序** - 长按拖动任务
 
-- Click the **中/EN** button in the top-right corner
-- Supports Chinese and English
-- Language preference is saved automatically
+### 设置
+1. 点击右上角 **⚙️** 按钮打开设置窗口
+2. 左侧选择设置项，右侧修改
+3. 设置实时生效
 
-## Data Storage
+## 数据存储
 
-- All task data is automatically saved locally
-- Data file location: `%APPDATA%\my-todo-app\todos.json`
-- Data persists after closing the application
+- 数据文件：`%APPDATA%\my-todo-app\todos.json`
+- 设置存储：浏览器 localStorage
+- 自动保存，无需手动操作
 
-## Shortcuts
+## 版本
 
-- **Enter** - Press Enter in the input box to quickly add a task
-- **Click outside** - Click outside the input box to close it automatically
-
-## Visual Effects
-
-- **Light theme** - Light semi-transparent background
-- **Smooth animations** - Fluid animations for task addition, completion, and deletion
-- **Frosted glass effect** - Background blur effect
-- **Minimalist design** - No unnecessary elements
-
-## FAQ
-
-### Q: How do I keep the window always on top?
-A: Click the green button in the top-left corner. The button turns purple when pinned.
-
-### Q: Why doesn't the window appear in Alt+Tab?
-A: This is a design feature to make the todo list act like a desktop widget without interfering with app switching.
-
-### Q: Will my task data be lost?
-A: No, all data is automatically saved to a local file.
-
-### Q: How do I change the window position?
-A: Drag the window title bar (top area) to move it.
-
-### Q: Can I run multiple instances?
-A: Yes, but each instance shares the same data file.
-
-## Technical Information
-
-- **Framework**: Electron
-- **Frontend**: HTML, CSS, JavaScript
-- **Data Storage**: JSON file
-- **Platform Support**: Windows
-
-## Version Information
-
-Current version: 1.0.0
-
-## Feedback & Support
-
-For questions or suggestions, please contact the developer.
-
----
-
-## 简介（中文）
-
-ToDo_list 是一个极简风格的桌面待办清单应用，采用透明毛玻璃效果，始终显示在桌面上，不会干扰你的工作流程。
-
-详细中文说明请参考上方英文部分。
+当前版本：1.0.0
 
 ## License
 
-MIT License
+MIT

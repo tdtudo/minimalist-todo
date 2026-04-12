@@ -10,8 +10,10 @@
   "build": {
     "appId": "com.example.todo",
     "productName": "ToDo_list",
+    "icon": "icon.png",
     "win": {
-      "target": ["portable", "nsis"]
+      "target": ["portable", "nsis"],
+      "icon": "icon.png"
     },
     "nsis": {
       "oneClick": false,
