@@ -7,12 +7,13 @@
 :root {
     --bg-opacity: 0.3;
     --bg-image: none;
+    --font-color: rgba(0, 0, 0, 0.85);
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: transparent;
-    color: rgba(0, 0, 0, 0.85);
+    color: var(--font-color);
     min-height: 100vh;
     overflow: hidden;
     position: relative;
@@ -39,34 +40,16 @@ body::before {
     align-items: center;
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    -webkit-app-region: drag;
-    position: relative;
-}
-
-.window-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bg-image);
-    background-size: cover;
-    background-position: center;
-    opacity: var(--bg-opacity);
-    z-index: -1;
-    pointer-events: none;
+    cursor: default;
+    user-select: none;
 }
 
 .window-controls {
-    -webkit-app-region: no-drag;
     display: flex;
     gap: 6px;
 }
 
 .header-right {
-    -webkit-app-region: no-drag;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -107,6 +90,11 @@ body::before {
 
 .control-btn.pin.locked {
     background: #667eea;
+}
+
+.control-btn.pin.on-top {
+    background: #ff6b6b;
+    box-shadow: 0 0 6px rgba(255, 107, 107, 0.6);
 }
 
 #settings-toggle {
@@ -159,31 +147,58 @@ body::before {
 .container {
     padding: 10px;
     background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
     height: calc(100vh - 26px);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    position: relative;
 }
 
-.container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bg-image);
-    background-size: cover;
-    background-position: center;
-    opacity: var(--bg-opacity);
-    z-index: -1;
-    pointer-events: none;
+.tags-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+.tag-btn {
+    padding: 4px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.tag-btn.active {
+    background: rgba(102, 126, 234, 0.6);
+    color: #fff;
+    border-color: rgba(102, 126, 234, 0.8);
+}
+
+.tag-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-left: 6px;
+    background: rgba(102, 126, 234, 0.2);
+    color: rgba(102, 126, 234, 0.9);
 }
 
 #todo-list {
     list-style: none;
-    max-height: calc(100vh - 46px);
+    flex: 1;
     overflow-y: auto;
+    padding-bottom: 10px;
 }
 
 #todo-list::-webkit-scrollbar {
@@ -293,7 +308,7 @@ body::before {
 .todo-text {
     flex: 1;
     font-size: 11px;
-    color: rgba(0, 0, 0, 0.75);
+    color: var(--font-color);
     line-height: 1.3;
     transition: all 0.3s ease;
 }
@@ -301,7 +316,7 @@ body::before {
 .edit-input {
     flex: 1;
     font-size: 11px;
-    color: rgba(0, 0, 0, 0.85);
+    color: var(--font-color);
     line-height: 1.3;
     padding: 2px 4px;
     border: 1px solid rgba(102, 126, 234, 0.5);
@@ -315,7 +330,7 @@ body::before {
     border: none;
     border-radius: 3px;
     background: transparent;
-    color: rgba(0, 0, 0, 0.25);
+    color: var(--font-color);
     font-size: 9px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -323,18 +338,19 @@ body::before {
 }
 
 .todo-item:hover .delete-btn {
-    opacity: 1;
+    opacity: 0.5;
 }
 
 .delete-btn:hover {
     background: rgba(255, 71, 87, 0.2);
-    color: rgba(0, 0, 0, 0.7);
+    color: rgba(255, 71, 87, 1);
+    opacity: 1;
 }
 
 .empty-state {
     text-align: center;
     padding: 20px 10px;
-    color: rgba(0, 0, 0, 0.3);
+    color: var(--font-color);
 }
 
 .empty-state p {
@@ -344,8 +360,10 @@ body::before {
 .input-overlay {
     position: fixed;
     top: 36px;
+    left: 10px;
     right: 10px;
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     opacity: 0;
     transform: translateY(-10px);
@@ -361,16 +379,88 @@ body::before {
 }
 
 #todo-input {
-    width: 160px;
+    flex: 1;
+    min-width: 0;
     padding: 8px 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(128, 128, 128, 0.3);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(128, 128, 128, 0.15);
     backdrop-filter: blur(20px);
-    color: rgba(0, 0, 0, 0.85);
+    color: var(--font-color);
+    font-size: 11px;
+}
+
+#todo-input::placeholder {
+    color: var(--font-color);
+    opacity: 0.5;
+}
+
+.tag-input {
+    width: 70px;
+    padding: 8px 10px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 14px;
+    background: rgba(128, 128, 128, 0.15);
+    backdrop-filter: blur(20px);
+    color: var(--font-color);
     font-size: 11px;
     outline: none;
     transition: all 0.3s ease;
+}
+
+.tag-input::placeholder {
+    color: var(--font-color);
+    opacity: 0.5;
+}
+
+.tag-input:focus {
+    width: 90px;
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.tag-btn {
+    padding: 4px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.tag-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.tag-btn.active {
+    background: rgba(102, 126, 234, 0.6);
+    color: #fff;
+    border-color: rgba(102, 126, 234, 0.8);
+}
+
+.tag-btn.draggable {
+    cursor: pointer;
+}
+
+.tag-btn.dragging {
+    opacity: 0.5;
+}
+
+.tag-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-left: 6px;
+    background: rgba(102, 126, 234, 0.2);
+    color: rgba(102, 126, 234, 0.9);
+    user-select: none;
+}
+
+.tag-badge:hover {
+    background: rgba(102, 126, 234, 0.3);
 }
 
 #todo-input:focus {
@@ -378,7 +468,8 @@ body::before {
 }
 
 #todo-input::placeholder {
-    color: rgba(0, 0, 0, 0.3);
+    color: var(--font-color);
+    opacity: 0.4;
 }
 
 #add-btn {
@@ -438,19 +529,21 @@ body::before {
 .dialog-title {
     font-size: 13px;
     font-weight: 600;
-    color: rgba(0, 0, 0, 0.85);
+    color: var(--font-color);
     margin-bottom: 8px;
 }
 
 .dialog-message {
     font-size: 11px;
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--font-color);
+    opacity: 0.8;
     margin-bottom: 4px;
 }
 
 .dialog-detail {
     font-size: 10px;
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--font-color);
+    opacity: 0.6;
     margin-bottom: 12px;
     line-height: 1.4;
 }
@@ -462,7 +555,8 @@ body::before {
     margin-bottom: 14px;
     cursor: pointer;
     font-size: 10px;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--font-color);
+    opacity: 0.7;
 }
 
 .dialog-checkbox input[type="checkbox"] {
@@ -513,4 +607,48 @@ body::before {
 
 .todo-item.drag-over {
     border-top: 2px solid rgba(102, 126, 234, 0.8);
+}
+
+.drag-preview {
+    position: fixed;
+    padding: 6px 14px;
+    background: rgba(102, 126, 234, 0.9);
+    color: #fff;
+    border-radius: 16px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.8) rotate(-3deg);
+    transition: opacity 0.15s, transform 0.15s;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    white-space: nowrap;
+}
+
+.drag-preview.visible {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+.drop-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    padding: 12px 24px;
+    background: rgba(102, 126, 234, 0.95);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 9998;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+}
+
+.drop-indicator.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }

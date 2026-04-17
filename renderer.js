@@ -4,31 +4,91 @@ let todos = [];
 let isLocked = false;
 let isAddOpen = false;
 let isSettingsOpen = false;
+let currentFilterTag = 'all';
+let isTagWindow = false;
+let hiddenTags = [];
+let customTags = JSON.parse(localStorage.getItem('customTags') || '[]').filter(tag => tag && tag.trim() !== '');
 let currentBgColor = localStorage.getItem('bgColor') || 'rgba(255, 255, 255, 0.25)';
 let currentBgImage = localStorage.getItem('bgImage') || '';
-let currentBgOpacity = parseFloat(localStorage.getItem('bgOpacity')) || 0.3;
+let savedOpacity = localStorage.getItem('bgOpacity');
+let currentBgOpacity = savedOpacity !== null ? parseFloat(savedOpacity) : 0.3;
+let currentFontColor = localStorage.getItem('fontColor') || 'rgba(0, 0, 0, 0.85)';
 
 document.addEventListener('DOMContentLoaded', () => {
     getLanguage();
     loadTodos();
     applyBackground();
+    applyFontColor();
     setupEventListeners();
     updateUI();
+    renderTagList();
+    
+    const header = document.querySelector('.window-header');
+    let isHeaderDragging = false;
+    let headerDragStartX = 0;
+    let headerDragStartY = 0;
+    
+    header.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        isHeaderDragging = true;
+        headerDragStartX = e.screenX;
+        headerDragStartY = e.screenY;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isHeaderDragging) return;
+        const dx = e.screenX - headerDragStartX;
+        const dy = e.screenY - headerDragStartY;
+        headerDragStartX = e.screenX;
+        headerDragStartY = e.screenY;
+        ipcRenderer.send('window-move', dx, dy);
+    });
+    
+    document.addEventListener('mouseup', () => {
+        isHeaderDragging = false;
+    });
 });
 
 ipcRenderer.on('settings-updated', (event, data) => {
     currentBgColor = localStorage.getItem('bgColor') || 'rgba(255, 255, 255, 0.25)';
     currentBgImage = localStorage.getItem('bgImage') || '';
-    currentBgOpacity = parseFloat(localStorage.getItem('bgOpacity')) || 0.3;
+    const savedOpacity = localStorage.getItem('bgOpacity');
+    currentBgOpacity = savedOpacity !== null ? parseFloat(savedOpacity) : 0.3;
+    currentFontColor = localStorage.getItem('fontColor') || 'rgba(0, 0, 0, 0.85)';
     
     if (data.type === 'language') {
         getLanguage();
     }
     applyBackground();
+    applyFontColor();
 });
 
 ipcRenderer.on('settings-closed', () => {
     isSettingsOpen = false;
+});
+
+ipcRenderer.on('set-filter-tag', (event, tag) => {
+    currentFilterTag = tag;
+    isTagWindow = true;
+    renderTagsFilter();
+    renderTodos();
+});
+
+ipcRenderer.on('todos-updated', async () => {
+    todos = await ipcRenderer.invoke('read-todos');
+    renderTodos();
+});
+
+ipcRenderer.on('tag-window-opened', (event, tag) => {
+    if (!hiddenTags.includes(tag)) {
+        hiddenTags.push(tag);
+        renderTodos();
+    }
+});
+
+ipcRenderer.on('tag-window-closed', (event, tag) => {
+    hiddenTags = hiddenTags.filter(t => t !== tag);
+    renderTodos();
 });
 
 async function loadTodos() {
@@ -48,14 +108,19 @@ function updateBackgroundStyle() {
     if (currentBgImage) {
         root.style.setProperty('--bg-image', `url(${currentBgImage})`);
         document.body.style.background = 'transparent';
-        document.querySelector('.window-header').style.background = 'rgba(255, 255, 255, 0.25)';
-        document.querySelector('.container').style.background = 'rgba(255, 255, 255, 0.25)';
+        document.querySelector('.window-header').style.background = 'transparent';
+        document.querySelector('.container').style.background = 'transparent';
     } else {
         root.style.setProperty('--bg-image', 'none');
         document.body.style.background = currentBgColor;
         document.querySelector('.window-header').style.background = currentBgColor;
         document.querySelector('.container').style.background = currentBgColor;
     }
+}
+
+function applyFontColor() {
+    document.documentElement.style.setProperty('--font-color', currentFontColor);
+    document.body.style.color = currentFontColor;
 }
 
 function setupEventListeners() {
@@ -79,6 +144,16 @@ function setupEventListeners() {
         }
     });
     
+    const tagsFilter = document.getElementById('tags-filter');
+    tagsFilter.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-btn') && !isTagWindow) {
+            document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilterTag = e.target.dataset.tag;
+            renderTodos();
+        }
+    });
+    
     document.getElementById('minimize-btn').addEventListener('click', () => {
         ipcRenderer.send('window-minimize');
     });
@@ -86,6 +161,8 @@ function setupEventListeners() {
     document.getElementById('close-btn').addEventListener('click', handleClose);
     
     document.getElementById('pin-btn').addEventListener('click', toggleLock);
+    
+    document.getElementById('pin-btn').addEventListener('dblclick', toggleAlwaysOnTop);
     
     document.getElementById('settings-toggle').addEventListener('click', toggleSettings);
     
@@ -111,16 +188,12 @@ function toggleSettings() {
 }
 
 function handleClose() {
-    const savedChoice = localStorage.getItem('closeChoice');
-    if (savedChoice) {
-        if (savedChoice === 'minimize') {
-            ipcRenderer.send('window-minimize');
-        } else {
-            ipcRenderer.send('window-quit');
-        }
-    } else {
-        showCloseDialog();
+    if (currentFilterTag !== 'all') {
+        ipcRenderer.send('window-close');
+        return;
     }
+    
+    ipcRenderer.send('window-minimize');
 }
 
 function showCloseDialog() {
@@ -144,7 +217,7 @@ function handleDialogChoice(choice) {
     if (choice === 'minimize') {
         ipcRenderer.send('window-minimize');
     } else {
-        ipcRenderer.send('window-quit');
+        ipcRenderer.send('window-close');
     }
 }
 
@@ -175,11 +248,27 @@ async function toggleLock() {
     }
 }
 
+async function toggleAlwaysOnTop() {
+    const isOnTop = await ipcRenderer.invoke('toggle-always-on-top');
+    const pinBtn = document.getElementById('pin-btn');
+    if (isOnTop) {
+        pinBtn.classList.add('on-top');
+    } else {
+        pinBtn.classList.remove('on-top');
+    }
+}
+
 async function addTodo() {
     const input = document.getElementById('todo-input');
+    const tagInput = document.getElementById('tag-input');
     const text = input.value.trim();
+    let tag = tagInput.value.trim();
     
     if (text === '') return;
+    
+    if (tag === '' && currentFilterTag && currentFilterTag !== 'all') {
+        tag = currentFilterTag;
+    }
     
     const tasks = text.split(/[;；]/).map(t => t.trim()).filter(t => t !== '');
     
@@ -188,14 +277,22 @@ async function addTodo() {
         const newTodo = {
             id: now + index,
             text: taskText,
+            tag: tag,
             completed: false
         };
         todos.unshift(newTodo);
     });
     
+    if (tag && !customTags.includes(tag)) {
+        customTags.push(tag);
+        localStorage.setItem('customTags', JSON.stringify(customTags.filter(t => t && t.trim() !== '')));
+        renderTagList();
+    }
+    
     await saveTodos();
     renderTodos();
     input.value = '';
+    tagInput.value = '';
     toggleAddOverlay();
 }
 
@@ -232,11 +329,18 @@ function renderTodos() {
     const list = document.getElementById('todo-list');
     list.innerHTML = '';
     
-    if (todos.length === 0) {
+    let filteredTodos = todos;
+    if (currentFilterTag !== 'all') {
+        filteredTodos = todos.filter(t => t.tag === currentFilterTag);
+    } else {
+        filteredTodos = todos.filter(t => !hiddenTags.includes(t.tag));
+    }
+    
+    if (filteredTodos.length === 0) {
         list.innerHTML = `<div class="empty-state"><p>${t('emptyState')}</p></div>`;
     } else {
-        const activeTodos = todos.filter(t => !t.completed);
-        const completedTodos = todos.filter(t => t.completed);
+        const activeTodos = filteredTodos.filter(t => !t.completed);
+        const completedTodos = filteredTodos.filter(t => t.completed);
         const sortedTodos = [...activeTodos, ...completedTodos];
         
         sortedTodos.forEach(todo => {
@@ -244,9 +348,10 @@ function renderTodos() {
             li.className = 'todo-item' + (todo.completed ? ' completed' : '');
             li.dataset.id = todo.id;
             li.draggable = true;
+            const tagHtml = todo.tag ? `<span class="tag-badge">${todo.tag}</span>` : '';
             li.innerHTML = `
                 <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
-                <span class="todo-text" ondblclick="editTodo(${todo.id})">${escapeHtml(todo.text)}</span>
+                <span class="todo-text" ondblclick="editTodo(${todo.id})">${escapeHtml(todo.text)}${tagHtml}</span>
                 <button class="delete-btn" onclick="deleteTodo(${todo.id})">${t('delete')}</button>
             `;
             
@@ -258,9 +363,50 @@ function renderTodos() {
             list.appendChild(li);
         });
     }
+    
+    renderTagsFilter();
+}
+
+function renderTagsFilter() {
+    const tagsFilter = document.getElementById('tags-filter');
+    
+    if (isTagWindow) {
+        tagsFilter.innerHTML = `<button class="tag-btn active draggable" data-tag="${escapeHtml(currentFilterTag)}" draggable="true">${escapeHtml(currentFilterTag)}</button>`;
+    } else {
+        const allTags = [...new Set(todos.map(t => t.tag).filter(tag => tag && tag.trim() !== '' && !hiddenTags.includes(tag)))];
+        
+        let html = `<button class="tag-btn ${currentFilterTag === 'all' ? 'active' : ''}" data-tag="all">${t('allTags')}</button>`;
+        allTags.forEach(tag => {
+            html += `<button class="tag-btn draggable ${currentFilterTag === tag ? 'active' : ''}" data-tag="${escapeHtml(tag)}" draggable="true">${escapeHtml(tag)}</button>`;
+        });
+        
+        tagsFilter.innerHTML = html;
+    }
+    
+    const tagBtns = tagsFilter.querySelectorAll('.tag-btn.draggable');
+    tagBtns.forEach(btn => {
+        btn.addEventListener('mousedown', handleTagMouseDown);
+    });
+}
+
+function renderTagList() {
+    const tagList = document.getElementById('tag-list');
+    tagList.innerHTML = '';
+    customTags.filter(tag => tag && tag.trim() !== '').forEach(tag => {
+        const option = document.createElement('option');
+        option.value = escapeHtml(tag);
+        tagList.appendChild(option);
+    });
 }
 
 let draggedItem = null;
+let draggedTag = null;
+let isDraggingOutside = false;
+let dragPreview = null;
+let dropIndicator = null;
+let isTagDragging = false;
+let tagDragStartX = 0;
+let tagDragStartY = 0;
 
 function handleDragStart(e) {
     draggedItem = this;
@@ -273,6 +419,67 @@ function handleDragEnd(e) {
     document.querySelectorAll('.todo-item').forEach(item => {
         item.classList.remove('drag-over');
     });
+}
+
+function handleTagMouseDown(e) {
+    if (e.button !== 0) return;
+    draggedTag = this.dataset.tag;
+    isTagDragging = false;
+    tagDragStartX = e.clientX;
+    tagDragStartY = e.clientY;
+    
+    document.addEventListener('mousemove', handleTagMouseMove);
+    document.addEventListener('mouseup', handleTagMouseUp);
+    e.preventDefault();
+}
+
+function handleTagMouseMove(e) {
+    const dx = e.clientX - tagDragStartX;
+    const dy = e.clientY - tagDragStartY;
+    
+    if (!isTagDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        isTagDragging = true;
+        dragPreview = document.getElementById('drag-preview');
+        dropIndicator = document.getElementById('drop-indicator');
+        dragPreview.textContent = draggedTag;
+        dragPreview.classList.add('visible');
+    }
+    
+    if (isTagDragging && dragPreview) {
+        dragPreview.style.left = e.clientX + 15 + 'px';
+        dragPreview.style.top = e.clientY + 15 + 'px';
+        
+        const isOutside = e.clientX < 0 || e.clientX > window.innerWidth || 
+                          e.clientY < 0 || e.clientY > window.innerHeight;
+        
+        if (isOutside) {
+            isDraggingOutside = true;
+            dropIndicator.classList.add('visible');
+        } else {
+            isDraggingOutside = false;
+            dropIndicator.classList.remove('visible');
+        }
+    }
+}
+
+function handleTagMouseUp(e) {
+    document.removeEventListener('mousemove', handleTagMouseMove);
+    document.removeEventListener('mouseup', handleTagMouseUp);
+    
+    if (dragPreview) {
+        dragPreview.classList.remove('visible');
+    }
+    if (dropIndicator) {
+        dropIndicator.classList.remove('visible');
+    }
+    
+    if (isTagDragging && isDraggingOutside && draggedTag) {
+        ipcRenderer.invoke('create-tag-window', draggedTag, e.screenX, e.screenY);
+    }
+    
+    isTagDragging = false;
+    isDraggingOutside = false;
+    draggedTag = null;
 }
 
 function handleDragOver(e) {

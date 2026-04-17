@@ -23,7 +23,13 @@ const translations = {
         clearImage: '清除图片',
         applyColor: '应用',
         colorPlaceholder: '输入颜色值 (如 #fff, rgb(255,0,0))',
-        opacity: '透明度'
+        opacity: '透明度',
+        selectTag: '选择标签',
+        allTags: '全部',
+        tagWork: '工作',
+        tagLife: '生活',
+        tagStudy: '学习',
+        tagOther: '其他'
     },
     en: {
         placeholder: 'Enter a new task...',
@@ -49,7 +55,13 @@ const translations = {
         clearImage: 'Clear',
         applyColor: 'Apply',
         colorPlaceholder: 'Enter color (e.g. #fff, rgb(255,0,0))',
-        opacity: 'Opacity'
+        opacity: 'Opacity',
+        selectTag: 'Select tag',
+        allTags: 'All',
+        tagWork: 'Work',
+        tagLife: 'Life',
+        tagStudy: 'Study',
+        tagOther: 'Other'
     }
 };
 
@@ -82,6 +94,18 @@ function updateUI() {
     const addBtn = document.getElementById('add-btn');
     if (addBtn) {
         addBtn.textContent = t('add');
+    }
+    
+    const tagSelect = document.getElementById('tag-select');
+    if (tagSelect) {
+        const options = tagSelect.querySelectorAll('option');
+        if (options.length >= 5) {
+            options[0].textContent = t('selectTag');
+            options[1].textContent = t('tagWork');
+            options[2].textContent = t('tagLife');
+            options[3].textContent = t('tagStudy');
+            options[4].textContent = t('tagOther');
+        }
     }
     
     const pinBtn = document.getElementById('pin-btn');

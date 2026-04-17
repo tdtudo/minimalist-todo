@@ -20,29 +20,37 @@
     </div>
     
     <div class="container">
+        <div class="tags-filter" id="tags-filter">
+            <button class="tag-btn active" data-tag="all">全部</button>
+        </div>
         <ul id="todo-list"></ul>
     </div>
     
     <div class="input-overlay" id="input-overlay">
         <input type="text" id="todo-input" placeholder="输入新任务...">
+        <input type="text" id="tag-input" class="tag-input" placeholder="标签" list="tag-list">
+        <datalist id="tag-list"></datalist>
         <button id="add-btn">添加</button>
     </div>
     
     <div class="dialog-overlay" id="dialog-overlay">
         <div class="dialog-box">
-            <div class="dialog-title">关闭确认</div>
-            <div class="dialog-message">您想要如何处理？</div>
-            <div class="dialog-detail">选择"最小化到托盘"将隐藏窗口但保持应用运行。</div>
+            <div class="dialog-title" data-i18n="dialog_title">关闭确认</div>
+            <div class="dialog-message" data-i18n="dialog_message">您想要如何处理？</div>
+            <div class="dialog-detail" data-i18n="dialog_detail">选择"最小化到托盘"将隐藏窗口但保持应用运行。</div>
             <label class="dialog-checkbox">
                 <input type="checkbox" id="dont-ask-again">
-                <span>不再询问</span>
+                <span data-i18n="dont_ask_again">不再询问</span>
             </label>
             <div class="dialog-buttons">
-                <button class="dialog-btn minimize-btn" id="dialog-minimize">最小化到托盘</button>
-                <button class="dialog-btn close-btn" id="dialog-close">关闭应用</button>
+                <button class="dialog-btn minimize-btn" id="dialog-minimize" data-i18n="minimize_to_tray">最小化到托盘</button>
+                <button class="dialog-btn close-btn" id="dialog-close" data-i18n="close_app">关闭应用</button>
             </div>
         </div>
     </div>
+    
+    <div class="drag-preview" id="drag-preview"></div>
+    <div class="drop-indicator" id="drop-indicator">释放以创建新窗口</div>
     
     <script src="i18n.js"></script>
     <script src="renderer.js"></script>
